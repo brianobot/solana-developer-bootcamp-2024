@@ -1,76 +1,97 @@
 import * as anchor from '@coral-xyz/anchor'
-import {Program} from '@coral-xyz/anchor'
-import {Keypair} from '@solana/web3.js'
-import {Crudapp} from '../target/types/crudapp'
+import { Program } from '@coral-xyz/anchor'
+import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { Crudapp }  from '../target/types/crudapp'
+import { confirmTransaction } from "@solana-developers/helpers"
+import { before } from 'node:test'
+
+
 
 describe('crudapp', () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env()
+  
   anchor.setProvider(provider)
-  const payer = provider.wallet as anchor.Wallet
-
+  
   const program = anchor.workspace.Crudapp as Program<Crudapp>
+  
+  const user = Keypair.generate()
 
-  const crudappKeypair = Keypair.generate()
+  const connection  = program.provider.connection;
+  
+  const payer = provider.wallet as anchor.Wallet
+  let journalEntry: PublicKey;
+  let bump: Number;
 
-  it('Initialize Crudapp', async () => {
-    await program.methods
-      .initialize()
-      .accounts({
-        crudapp: crudappKeypair.publicKey,
-        payer: payer.publicKey,
-      })
-      .signers([crudappKeypair])
-      .rpc()
+  before(async() => {
+    [journalEntry, bump] = PublicKey.findProgramAddressSync([
+      Buffer.from("journal_entry"),
+      user.publicKey.toBuffer(),
+      Buffer.from("Test Journal Entry"),
+    ], program.programId);
 
-    const currentCount = await program.account.crudapp.fetch(crudappKeypair.publicKey)
+    console.log("✅ Journal Entry Account: ", journalEntry);
+  });
 
-    expect(currentCount.count).toEqual(0)
+  it('Create Journal Entry!', async () => {
+    await airdrop(connection, user.publicKey, 10);
+
+    let tx = await program.methods
+    .createJournalEntry(
+      "Test Journal Entry",
+      "Initial Message in my journal Entry."
+    )
+    .accountsPartial({
+      user: user.publicKey,
+    })
+    .signers([user])
+    .rpc();
+
+    console.log("Transaction for Create Journal Entry: ", tx);
+  })
+  
+  it('Update Journal Entry!', async () => {
+    let tx = await program.methods
+    .updateJournalEntry(
+      "Update Message in my journal Entry."
+    )
+    .accountsPartial({
+      user: user.publicKey,
+      journalEntry: journalEntry,
+    })
+    .signers([user])
+    .rpc();
+
+    console.log("Transaction for Update Journal Entry: ", tx);
+  })
+  
+  it('Close Journal Entry!', async () => {
+    let tx = await program.methods
+    .closeJournalEntry()
+    .accountsPartial({
+      user: user.publicKey,
+      journalEntry: journalEntry,
+    })
+    .signers([user])
+    .rpc();
+
+    console.log("Transaction for Close Journal Entry: ", tx);
   })
 
-  it('Increment Crudapp', async () => {
-    await program.methods.increment().accounts({ crudapp: crudappKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.crudapp.fetch(crudappKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(1)
-  })
-
-  it('Increment Crudapp Again', async () => {
-    await program.methods.increment().accounts({ crudapp: crudappKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.crudapp.fetch(crudappKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(2)
-  })
-
-  it('Decrement Crudapp', async () => {
-    await program.methods.decrement().accounts({ crudapp: crudappKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.crudapp.fetch(crudappKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(1)
-  })
-
-  it('Set crudapp value', async () => {
-    await program.methods.set(42).accounts({ crudapp: crudappKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.crudapp.fetch(crudappKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(42)
-  })
-
-  it('Set close the crudapp account', async () => {
-    await program.methods
-      .close()
-      .accounts({
-        payer: payer.publicKey,
-        crudapp: crudappKeypair.publicKey,
-      })
-      .rpc()
-
-    // The account should no longer exist, returning null.
-    const userAccount = await program.account.crudapp.fetchNullable(crudappKeypair.publicKey)
-    expect(userAccount).toBeNull()
-  })
 })
+
+
+async function airdrop(connection: anchor.web3.Connection, address: PublicKey, amount: number) {
+  let airdrop_signature = await connection.requestAirdrop(
+    address,
+    amount * LAMPORTS_PER_SOL
+  );
+  // console.log("✍🏾 Airdrop Signature: ", airdrop_signature);
+
+  let confirmedAirdrop = await confirmTransaction(connection, airdrop_signature, "confirmed");
+
+  // console.log(`🪂 Airdropped ${amount} SOL to ${address.toBase58()}`);
+  // console.log("✅ Tx Signature: ", confirmedAirdrop);
+
+  return confirmedAirdrop;
+}

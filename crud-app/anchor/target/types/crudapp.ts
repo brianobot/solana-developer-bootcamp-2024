@@ -28,6 +28,7 @@ export type Crudapp = {
       "accounts": [
         {
           "name": "user",
+          "writable": true,
           "signer": true
         },
         {
@@ -64,6 +65,10 @@ export type Crudapp = {
               }
             ]
           }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []

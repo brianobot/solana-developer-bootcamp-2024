@@ -84,12 +84,14 @@ pub struct UpdateJournalEntry<'info> {
 
 #[derive(Accounts)]
 pub struct CloseJournalEntry<'info> {
+    #[account(mut)]
     pub user: Signer<'info>,
     #[account(
         mut,
-        close = user,
+        close = user, // the public key specific here must be the signer of the instruction
         seeds = [b"journal_entry", user.key().as_ref(), journal_entry.title.as_bytes()],
         bump = journal_entry.bump,
     )]
     pub journal_entry: Account<'info, JournalEntry>,
+    pub system_program: Program<'info, System>,
 }
