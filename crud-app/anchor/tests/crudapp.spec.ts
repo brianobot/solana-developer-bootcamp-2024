@@ -20,6 +20,7 @@ describe('crudapp', () => {
   const connection  = program.provider.connection;
   
   const payer = provider.wallet as anchor.Wallet
+  
   let journalEntry: PublicKey;
   let bump: Number;
 

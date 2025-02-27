@@ -90,7 +90,7 @@ pub struct CloseJournalEntry<'info> {
         mut,
         close = user, // the public key specific here must be the signer of the instruction
         seeds = [b"journal_entry", user.key().as_ref(), journal_entry.title.as_bytes()],
-        bump = journal_entry.bump,
+        bump =  journal_entry.bump,
     )]
     pub journal_entry: Account<'info, JournalEntry>,
     pub system_program: Program<'info, System>,
