@@ -41,5 +41,16 @@ There account in charge of making new tokens from a mint account
     ```
 4. Initialize Metadata for the Token Mint
     ```bash
-    
+    spl-token initialize-metadata mntWGnL4t8Lumk58YgMmRQ9mdkQJ3Z7dktsKim81jbC 'BATMAN' 'BTM' https://raw.githubusercontent.com/brianobot/solana-developer-bootcamp-2024/refs/heads/master/new-token/metadata.json
     ```
+
+5. Mint Some Token to an Account
+    - Create a Token Account to hold the token
+        ```bash
+        spl-token create-account mnt***
+        ```
+
+    - Mint Token to the Token Account   
+        ```bash
+        spl-token mint 1000
+        ```
