@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::{Mint, TokenInterface, TokenAccount}};
 
 use crate::state::Offer;
+use crate::instructions::shared::transfer_tokens;
 use crate::constants::ANCHOR_DESCRIMINATOR;
 
 
@@ -50,10 +51,32 @@ pub struct MakeOffer<'info> {
 }
 
 
-pub fn send_offer_tokens(ctx: &Context<MakeOffer>) -> Result<()> {
+pub fn send_offer_tokens(ctx: &Context<MakeOffer>, _id: u64, amount: u64, _amount_wanted: u64) -> Result<()> {
+    transfer_tokens(
+        &ctx.accounts.maker_token_account_a, 
+        &ctx.accounts.vault, 
+        &amount, 
+        &ctx.accounts.token_mint_a, 
+        &ctx.accounts.maker, 
+        &ctx.accounts.token_program
+    )?;
     Ok(())
 }
 
-pub fn save_offer(ctx: &Context<MakeOffer>) -> Result<()> {
+pub fn save_offer(ctx: Context<MakeOffer>, id: u64, amount_wanted: u64) -> Result<()> {
+    let timestamp = Clock::get()?.unix_timestamp as u64;
+
+    let offer = &mut ctx.accounts.offer;
+    
+    offer.set_inner( Offer {
+        id,
+        maker: ctx.accounts.maker.key(),
+        token_mint_a: ctx.accounts.token_mint_a.key(),
+        token_mint_b: ctx.accounts.token_mint_b.key(),
+        token_b_wanted_amount: amount_wanted,
+        created_at: timestamp,
+        updated_at: timestamp,
+        bump: ctx.bumps.offer,
+    });
     Ok(())
 }
