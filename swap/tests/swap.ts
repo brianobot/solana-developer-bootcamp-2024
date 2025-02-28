@@ -6,6 +6,7 @@ import { BN } from "bn.js";
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { confirmTransaction } from "@solana-developers/helpers";
 import { randomBytes } from 'node:crypto';
+import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 
 describe("swap", () => {
   const provider = anchor.AnchorProvider.env();
@@ -66,6 +67,14 @@ describe("swap", () => {
         maker.publicKey,
     );
     console.log("✅ Maker Token Account A", makerTokenAccountA);
+    
+    takerTokenAccountB = await getOrCreateAssociatedTokenAccount(
+        connection,
+        taker,
+        tokenMintB,
+        taker.publicKey,
+    );
+    console.log("✅ Taker Token Account B", takerTokenAccountB);
 
     await mintTo(
         connection,
@@ -73,6 +82,16 @@ describe("swap", () => {
         tokenMintA,
         makerTokenAccountA.address,
         maker,
+        1000
+    );
+    console.log("✅ Minted 1000 Token to Maker Token Account A");
+    
+    await mintTo(
+        connection,
+        taker,
+        tokenMintB,
+        takerTokenAccountB.address,
+        taker,
         1000
     );
     console.log("✅ Minted 1000 Token to Maker Token Account A");
@@ -90,12 +109,31 @@ describe("swap", () => {
         tokenMintA: tokenMintA,
         tokenMintB: tokenMintB,
         offer: offer,
-        // makerTokenAccountA: makerTokenAccountA,
+        makerTokenAccountA: makerTokenAccountA.address,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     })
     .signers([maker])
-    .rpc({skipPreflight: true});
+    .rpc();
+
+    console.log("Your transaction signature", tx);
+  });
+  
+  it("Take Offer is Completed!", async () => {
+    const tx = await program.methods.take()
+    .accountsPartial({
+        taker: taker.publicKey,
+        maker: maker.publicKey,
+        tokenMintA: tokenMintA,
+        tokenMintB: tokenMintB,
+        offer: offer,
+        takerTokenAccountB: takerTokenAccountB.address,
+        vault: vault,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    })
+    .signers([taker])
+    .rpc();
 
     console.log("Your transaction signature", tx);
   });

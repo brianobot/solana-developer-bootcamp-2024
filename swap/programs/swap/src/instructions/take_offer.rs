@@ -6,7 +6,6 @@ use crate::instructions::shared::transfer_tokens;
 
 
 #[derive(Accounts)]
-#[instruction(id: u64)]
 pub struct TakeOffer<'info> {
     #[account(mut)]
     pub taker: Signer<'info>,
@@ -19,12 +18,12 @@ pub struct TakeOffer<'info> {
     #[account(
         mint::token_program = token_program,
     )]
-    pub token_mint_a: InterfaceAccount<'info, Mint>,
+    pub token_mint_a: Box<InterfaceAccount<'info, Mint>>,
     
     #[account(
         mint::token_program = token_program,
     )]
-    pub token_mint_b: InterfaceAccount<'info, Mint>,
+    pub token_mint_b: Box<InterfaceAccount<'info, Mint>>,
 
     #[account(
         init_if_needed,
@@ -59,7 +58,7 @@ pub struct TakeOffer<'info> {
         seeds = [b"offer", maker.key().as_ref(), offer.id.to_le_bytes().as_ref()],
         bump = offer.bump,
     )]
-    pub offer: Account<'info, Offer>,
+    pub offer: Box<Account<'info, Offer>>,
     #[account(
         mut,
         associated_token::mint = token_mint_a,

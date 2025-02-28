@@ -52,6 +52,8 @@ pub struct MakeOffer<'info> {
 
 
 pub fn send_offer_tokens(ctx: &Context<MakeOffer>, _id: u64, amount: u64, _amount_wanted: u64) -> Result<()> {
+    msg!("💙 Maker Token A Address: {}", ctx.accounts.maker_token_account_a.key());
+
     transfer_tokens(
         &ctx.accounts.maker_token_account_a, 
         &ctx.accounts.vault, 
