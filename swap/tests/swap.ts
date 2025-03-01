@@ -3,10 +3,10 @@ import { Program } from "@coral-xyz/anchor";
 import { Swap } from "../target/types/swap";
 import { Account, ASSOCIATED_TOKEN_PROGRAM_ID, createMint, getAssociatedTokenAddressSync, getOrCreateAssociatedTokenAccount, mintTo, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { BN } from "bn.js";
-import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { confirmTransaction } from "@solana-developers/helpers";
 import { randomBytes } from 'node:crypto';
-import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+
 
 describe("swap", () => {
   const provider = anchor.AnchorProvider.env();
@@ -18,16 +18,16 @@ describe("swap", () => {
   let maker = anchor.web3.Keypair.generate();
   let taker = anchor.web3.Keypair.generate();
 
-  let tokenMintA;
-  let tokenMintB;
+  let tokenMintA: PublicKey;
+  let tokenMintB: PublicKey;
 
-  let makerTokenAccountA;
-  let takerTokenAccountB;
+  let makerTokenAccountA: Account;
+  let takerTokenAccountB: Account;
 
-  let offer;
-  let offerBump;
-  let vault;
-  let vaultBump;
+  let offer: PublicKey;
+  let offerBump: Number;
+  let vault: PublicKey;
+  let vaultBump: Number;
 
   const arg_id = new BN(randomBytes(8));
 
@@ -42,12 +42,16 @@ describe("swap", () => {
     ], program.programId);
     console.log("✅ Offer PDA Acccount Address: ", offer);
 
+    // [vault, vaultBump] = PublicKey.findProgramAddressSync([
+
+    // ]);
+
     tokenMintA = await createMint(
         connection,
         maker,
         maker.publicKey,
         null,
-        6,        
+        6,   
     );
     console.log("✅ Token Mint A: ", tokenMintA);
     
@@ -56,7 +60,7 @@ describe("swap", () => {
         taker,
         taker.publicKey,
         null,
-        6
+        6,
     );
     console.log("✅ Token Mint B: ", tokenMintB);
 
@@ -82,7 +86,7 @@ describe("swap", () => {
         tokenMintA,
         makerTokenAccountA.address,
         maker,
-        1000
+        1000,
     );
     console.log("✅ Minted 1000 Token to Maker Token Account A");
     
@@ -92,7 +96,7 @@ describe("swap", () => {
         tokenMintB,
         takerTokenAccountB.address,
         taker,
-        1000
+        1000,
     );
     console.log("✅ Minted 1000 Token to Maker Token Account A");
 
